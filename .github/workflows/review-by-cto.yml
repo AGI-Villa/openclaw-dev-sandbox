@@ -8,32 +8,20 @@ jobs:
   cto-review:
     if: github.event.label.name == 'cto-review'
     runs-on: self-hosted
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - name: Run CTO Review Agent
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          PR_NUM="${{ github.event.pull_request.number }}"
-          PR_URL="${{ github.event.pull_request.html_url }}"
-          PR_BRANCH="${{ github.event.pull_request.head.ref }}"
-
-          echo "CTO Review triggered: PR #${PR_NUM}"
-
-          /home/admin/.local/bin/agent \
-            -p \
-            --force \
-            --trust \
+          /home/admin/.local/bin/agent -p --force --trust \
             --workspace /home/admin/openclaw-dev-sandbox \
-            "[cursor-review] PR #${PR_NUM}
+            "[cursor-review] PR #${{ github.event.pull_request.number }}
 
-仓库：AGI-Villa/openclaw-dev-sandbox
-PR URL：${PR_URL}
-PR 分支：${PR_BRANCH}
+PR URL: ${{ github.event.pull_request.html_url }}
+Branch: ${{ github.event.pull_request.head.ref }}
+Repo: AGI-Villa/openclaw-dev-sandbox
 
-详细执行步骤见工作区 skills/cursor-dev/SKILL.md。"
+Follow instructions in skills/cursor-dev/SKILL.md"
