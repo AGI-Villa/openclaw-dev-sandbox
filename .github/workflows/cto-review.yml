@@ -1,19 +1,12 @@
 name: CTO Code Review
 
-# 触发条件：PR 被 request review，且 reviewer 是 darrencto
 on:
   pull_request:
-    types: [review_requested, opened, reopened, synchronize]
+    types: [review_requested]
 
 jobs:
   cto-review:
-    # review_requested 时：检查被请求的 reviewer 是否是 darrencto
-    # opened/reopened/synchronize 时：检查 reviewers 列表里是否包含 darrencto
-    if: |
-      (github.event.action == 'review_requested' && github.event.requested_reviewer.login == 'darrencto') ||
-      (github.event.action != 'review_requested' && contains(toJSON(github.event.pull_request.requested_reviewers), 'darrencto'))
-
-    # 在本机的 self-hosted runner 上运行（需提前注册）
+    if: github.event.requested_reviewer.login == 'darrencto'
     runs-on: self-hosted
 
     steps:
@@ -24,15 +17,13 @@ jobs:
 
       - name: Run CTO Review Agent
         env:
-          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           PR_NUM="${{ github.event.pull_request.number }}"
           PR_URL="${{ github.event.pull_request.html_url }}"
           PR_BRANCH="${{ github.event.pull_request.head.ref }}"
 
-          echo "🔍 CTO Review 触发：PR #${PR_NUM} — ${PR_URL}"
-          echo "分支：${PR_BRANCH}"
+          echo "CTO Review triggered: PR #${PR_NUM}"
 
           /home/admin/.local/bin/agent \
             -p \
