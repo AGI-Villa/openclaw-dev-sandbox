@@ -50,3 +50,4 @@ python weather.py London
 - `main` — 受保护，只接受 PR 合并
 - `feat/issue-<N>-<desc>` — 功能开发分支
 - `fix/issue-<N>-<desc>` — Bug 修复分支
+# trigger test 3 Thu Mar  5 00:14:52 CST 2026

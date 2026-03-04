@@ -3,12 +3,15 @@ name: CTO Code Review
 # 触发条件：PR 被 request review，且 reviewer 是 darrencto
 on:
   pull_request:
-    types: [review_requested]
+    types: [review_requested, opened, reopened, synchronize]
 
 jobs:
   cto-review:
-    # 只有 reviewer 是 darrencto 时才运行
-    if: github.event.requested_reviewer.login == 'darrencto'
+    # review_requested 时：检查被请求的 reviewer 是否是 darrencto
+    # opened/reopened/synchronize 时：检查 reviewers 列表里是否包含 darrencto
+    if: |
+      (github.event.action == 'review_requested' && github.event.requested_reviewer.login == 'darrencto') ||
+      (github.event.action != 'review_requested' && contains(toJSON(github.event.pull_request.requested_reviewers), 'darrencto'))
 
     # 在本机的 self-hosted runner 上运行（需提前注册）
     runs-on: self-hosted
@@ -38,7 +41,7 @@ jobs:
             --workspace /home/admin/openclaw-dev-sandbox \
             "[cursor-review] PR #${PR_NUM}
 
-仓库：SuperSupeng/openclaw-dev-sandbox
+仓库：AGI-Villa/openclaw-dev-sandbox
 PR URL：${PR_URL}
 PR 分支：${PR_BRANCH}
 
