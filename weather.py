@@ -4,28 +4,51 @@ import sys
 import json
 import urllib.request
 import urllib.error
+import time
 
 
 def fetch_weather(city: str) -> dict:
     """向 wttr.in 请求指定城市的天气数据，返回解析后的 JSON。"""
     url = f"https://wttr.in/{urllib.request.quote(city)}?format=j1"
-    req = urllib.request.Request(url, headers={"User-Agent": "weather-cli/1.0"})
-
-    try:
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            return json.loads(resp.read().decode("utf-8"))
-    except urllib.error.HTTPError as e:
-        if e.code == 404:
-            print(f"错误: 找不到城市 '{city}'，请检查城市名是否正确。")
-        else:
-            print(f"错误: HTTP {e.code} — {e.reason}")
-        sys.exit(1)
-    except urllib.error.URLError as e:
-        print(f"错误: 网络连接失败 — {e.reason}")
-        sys.exit(1)
-    except json.JSONDecodeError:
-        print("错误: 无法解析 API 返回的数据。")
-        sys.exit(1)
+    
+    # 尝试3次，每次增加超时时间
+    for attempt in range(3):
+        timeout = 15 + attempt * 10  # 15s, 25s, 35s
+        req = urllib.request.Request(url, headers={"User-Agent": "weather-cli/1.0"})
+        
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                print(f"错误: 找不到城市 '{city}'，请检查城市名是否正确。")
+            else:
+                print(f"错误: HTTP {e.code} — {e.reason}")
+            sys.exit(1)
+        except urllib.error.URLError as e:
+            if attempt < 2:  # 不是最后一次尝试
+                print(f"警告: 网络连接超时，正在重试... ({attempt + 1}/3)")
+                time.sleep(2)
+                continue
+            else:
+                print(f"错误: 网络连接失败 — {e.reason}")
+                sys.exit(1)
+        except json.JSONDecodeError:
+            if attempt < 2:
+                print(f"警告: 无法解析数据，正在重试... ({attempt + 1}/3)")
+                time.sleep(2)
+                continue
+            else:
+                print("错误: 无法解析 API 返回的数据。")
+                sys.exit(1)
+        except Exception as e:
+            if attempt < 2:
+                print(f"警告: 未知错误，正在重试... ({attempt + 1}/3)")
+                time.sleep(2)
+                continue
+            else:
+                print(f"错误: {str(e)}")
+                sys.exit(1)
 
 
 def display_weather(data: dict, city: str) -> None:
