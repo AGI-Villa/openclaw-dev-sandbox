@@ -1,0 +1,45 @@
+name: CTO Code Review
+
+# 触发条件：PR 被 request review，且 reviewer 是 darrencto
+on:
+  pull_request:
+    types: [review_requested]
+
+jobs:
+  cto-review:
+    # 只有 reviewer 是 darrencto 时才运行
+    if: github.event.requested_reviewer.login == 'darrencto'
+
+    # 在本机的 self-hosted runner 上运行（需提前注册）
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run CTO Review Agent
+        env:
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUM="${{ github.event.pull_request.number }}"
+          PR_URL="${{ github.event.pull_request.html_url }}"
+          PR_BRANCH="${{ github.event.pull_request.head.ref }}"
+
+          echo "🔍 CTO Review 触发：PR #${PR_NUM} — ${PR_URL}"
+          echo "分支：${PR_BRANCH}"
+
+          /home/admin/.local/bin/agent \
+            -p \
+            --force \
+            --trust \
+            --workspace /home/admin/openclaw-dev-sandbox \
+            "[cursor-review] PR #${PR_NUM}
+
+仓库：SuperSupeng/openclaw-dev-sandbox
+PR URL：${PR_URL}
+PR 分支：${PR_BRANCH}
+
+详细执行步骤见工作区 skills/cursor-dev/SKILL.md。"
