@@ -38,7 +38,7 @@ jobs:
             --workspace /home/admin/openclaw-dev-sandbox \
             "[cursor-review] PR #${PR_NUM}
 
-仓库：SuperSupeng/openclaw-dev-sandbox
+仓库：AGI-Villa/openclaw-dev-sandbox
 PR URL：${PR_URL}
 PR 分支：${PR_BRANCH}
 
