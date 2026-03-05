@@ -59,8 +59,8 @@ bg-remove --help
 
 1. 启动 Web 服务:
    ```bash
-   # 使用 Docker
-   docker run --rm -p 8080:8080 bg-removal
+   # 使用 Docker (推荐，自动挂载数据卷)
+   docker run --rm -p 8080:8080 -v $(pwd)/data:/data bg-removal
    
    # 或使用 Python
    python -m uvicorn bg_removal.web:app --host 0.0.0.0 --port 8080
@@ -72,17 +72,51 @@ bg-remove --help
    - 拖拽或点击上传图片
    - 实时预览处理结果
    - 下载处理后的 PNG 图片
+   - **历史记录面板**: 查看、下载、删除历史处理记录
+   - **数据持久化**: 处理后的图片和记录保存在 `/data` 目录（需挂载卷）
    - 响应式设计，支持移动设备
+
+## 数据持久化
+
+历史记录功能需要数据持久化存储：
+
+### Docker 部署（推荐）
+
+```bash
+# 创建数据目录
+mkdir -p data
+
+# 运行并挂载数据卷
+docker run --rm -p 8080:8080 -v $(pwd)/data:/data bg-removal
+```
+
+处理后的图片将保存在 `data/processed/` 目录，历史记录保存在 `data/history.json`。
+
+### 注意事项
+
+- 首次运行会自动创建 `/data` 目录结构
+- 建议将 `/data` 目录挂载到宿主机，否则容器重启后数据会丢失
+- 历史记录包含处理时间和文件信息，可随时下载历史图片
 
 ## API 接口
 
 Web 服务提供 REST API:
 
 - **POST `/api/remove-bg`**: 上传图片文件，返回处理后的 PNG
+- **GET `/api/history`**: 获取历史记录列表
+- **DELETE `/api/history/{id}`**: 删除指定历史记录
+- **GET `/api/download/{filename}`**: 下载处理后的图片
 
 请求示例:
 ```bash
+# 处理图片
 curl -X POST -F "file=@input.jpg" http://localhost:8080/api/remove-bg -o output.png
+
+# 获取历史记录
+curl http://localhost:8080/api/history
+
+# 删除记录
+curl -X DELETE http://localhost:8080/api/history/{record_id}
 ```
 
 ## 安全限制
