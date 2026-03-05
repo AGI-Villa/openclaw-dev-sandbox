@@ -45,6 +45,18 @@ python weather.py London
 
 仅使用 Python 标准库（`urllib`、`json`），无需安装额外依赖。要求 Python 3.6+。
 
+## 图片背景移除 CLI
+
+基于 rembg 的图片背景移除工具，支持 PNG/JPG/WebP 输入，输出带透明通道的 PNG。
+
+```bash
+cd bg_removal
+docker build --target test -t bg-removal-test .
+docker run --rm bg-removal-test
+```
+
+详见 [bg_removal/README.md](bg_removal/README.md)。
+
 ## 分支规范
 
 - `main` — 受保护，只接受 PR 合并

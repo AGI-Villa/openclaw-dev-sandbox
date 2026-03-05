@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "bg-removal"
+version = "0.1.0"
+description = "图片背景移除工具，基于 rembg，支持 PNG/JPG/WebP 输入，输出带透明通道的 PNG。"
+authors = ["OpenClaw Dev Team"]
+readme = "README.md"
+packages = [{include = "bg_removal"}]
+
+[tool.poetry.scripts]
+bg-remove = "bg_removal.cli:main"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+rembg = {version = "^2.0.57", extras = ["cpu"]}
+Pillow = "^10.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
