@@ -7,13 +7,29 @@ jobs:
     if: github.event.requested_reviewer.login == 'darrencto'
     runs-on: self-hosted
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Run CTO Review Agent
+      - name: Notify CTO Agent via Discord
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DISCORD_DEFAULT_BOT_TOKEN: ${{ secrets.DISCORD_DEFAULT_BOT_TOKEN }}
+          DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_REVIEW_CHANNEL_ID }}
+          DISCORD_CTO_BOT_ID: "1477672017254940944"
         run: |
-          /home/admin/.local/bin/agent -p --force --trust \
-            --workspace /home/admin/openclaw-dev-sandbox \
-            "[cursor-review] PR #${{ github.event.pull_request.number }} repo:AGI-Villa/openclaw-dev-sandbox url:${{ github.event.pull_request.html_url }} branch:${{ github.event.pull_request.head.ref }} see:skills/cursor-dev/SKILL.md"
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          PR_URL="${{ github.event.pull_request.html_url }}"
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          PR_BRANCH="${{ github.event.pull_request.head.ref }}"
+          REPO="${{ github.repository }}"
+
+          MESSAGE="<@${DISCORD_CTO_BOT_ID}> [cursor-review] PR #${PR_NUMBER} 需要 Code Review
+
+**PR**: ${PR_TITLE}
+**仓库**: ${REPO}
+**分支**: ${PR_BRANCH}
+**链接**: ${PR_URL}
+
+请按照 cursor-review skill 执行审查，完成后 approve 并 merge。"
+
+          curl -s -X POST \
+            -H "Authorization: Bot ${DISCORD_DEFAULT_BOT_TOKEN}" \
+            -H "Content-Type: application/json" \
+            "https://discord.com/api/v10/channels/${DISCORD_CHANNEL_ID}/messages" \
+            -d "{\"content\": $(echo "$MESSAGE" | python3 -c 'import sys,json; print(json.dumps(sys.stdin.read()))')}"
