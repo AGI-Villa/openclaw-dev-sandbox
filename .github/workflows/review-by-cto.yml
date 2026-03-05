@@ -8,47 +8,11 @@ jobs:
     runs-on: self-hosted
     steps:
       - name: Trigger CTO Agent via OpenClaw Cron Job
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+          REPO: ${{ github.repository }}
         run: |
-          PR_NUMBER="${{ github.event.pull_request.number }}"
-          PR_URL="${{ github.event.pull_request.html_url }}"
-          PR_TITLE="${{ github.event.pull_request.title }}"
-          PR_BRANCH="${{ github.event.pull_request.head.ref }}"
-          REPO="${{ github.repository }}"
-          JOBS_FILE="/home/admin/.openclaw/cron/jobs.json"
-          JOB_ID="cto-review-pr-${PR_NUMBER}-$(date +%s)"
-
-          python3 - <<EOF
-import json, time
-
-with open("$JOBS_FILE") as f:
-    d = json.load(f)
-
-new_job = {
-    "id": "$JOB_ID",
-    "agentId": "cto",
-    "name": "CTO Review PR #${PR_NUMBER}",
-    "enabled": True,
-    "schedule": {
-        "kind": "cron",
-        "expr": "* * * * *"
-    },
-    "sessionTarget": "isolated",
-    "wakeMode": "now",
-    "payload": {
-        "kind": "agentTurn",
-        "message": "[cursor-review] PR #${PR_NUMBER}\n\n仓库: ${REPO}\n标题: ${PR_TITLE}\n分支: ${PR_BRANCH}\n链接: ${PR_URL}\n\n请按照 cursor-review skill 执行审查，用 darrencto 身份 approve 并 merge。",
-        "timeoutSeconds": 1800
-    },
-    "state": {
-        "nextRunAtMs": int(time.time() * 1000) - 1000,
-        "runOnce": True
-    }
-}
-
-d["jobs"].append(new_job)
-
-with open("$JOBS_FILE", "w") as f:
-    json.dump(d, f, ensure_ascii=False, indent=2)
-
-print(f"CTO review job scheduled: $JOB_ID")
-EOF
+          python3 /home/admin/.openclaw/workspace-cto/scripts/trigger-cto-review.py
