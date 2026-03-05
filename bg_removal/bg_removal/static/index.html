@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>背景移除工具 - Web 界面</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>背景移除工具</h1>
+            <p>基于 rembg 的 AI 背景移除服务</p>
+        </header>
+
+        <main>
+            <div class="upload-area" id="dropZone">
+                <div class="upload-icon">📁</div>
+                <p>拖拽图片到这里或点击上传</p>
+                <p class="supported-formats">支持格式: PNG, JPG, JPEG, WebP</p>
+                <input type="file" id="fileInput" accept=".png,.jpg,.jpeg,.webp" hidden>
+            </div>
+
+            <div class="preview-container" id="previewContainer" style="display: none;">
+                <div class="preview-section">
+                    <h3>原始图片</h3>
+                    <img id="originalPreview" alt="原始图片预览">
+                </div>
+                <div class="preview-section">
+                    <h3>处理结果</h3>
+                    <div class="result-placeholder" id="resultPlaceholder">
+                        <div class="processing-indicator" id="processingIndicator" style="display: none;">
+                            <div class="spinner"></div>
+                            <p>处理中...</p>
+                        </div>
+                        <img id="resultPreview" alt="处理结果预览" style="display: none;">
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls" id="controls" style="display: none;">
+                <button id="downloadBtn" class="btn primary" disabled>下载结果</button>
+                <button id="resetBtn" class="btn secondary">重新上传</button>
+            </div>
+
+            <div class="error-message" id="errorMessage" style="display: none;"></div>
+        </main>
+
+        <footer>
+            <p>© 2026 OpenClaw Dev Team | 基于 <a href="https://github.com/danielgatis/rembg" target="_blank">rembg</a></p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -13,6 +13,8 @@ bg-remove = "bg_removal.cli:main"
 python = "^3.10"
 rembg = {version = "^2.0.57", extras = ["cpu"]}
 Pillow = "^10.0"
+fastapi = "^0.104.1"
+uvicorn = "^0.24.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0"

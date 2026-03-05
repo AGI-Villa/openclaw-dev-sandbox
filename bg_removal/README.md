@@ -1,99 +1,124 @@
-# bg-removal — 图片背景移除工具
+# 背景移除工具 (Background Removal Tool)
 
-基于 [rembg](https://github.com/danielgatis/rembg) 的图片背景移除 CLI 工具。
+基于 [rembg](https://github.com/danielgatis/rembg) 的图片背景移除工具，支持命令行和 Web 界面两种使用方式。
 
-- 支持输入格式：PNG / JPG / WebP
-- 输出格式：PNG（带透明 Alpha 通道）
-- 依赖管理：Poetry
-- 开发/测试环境：Docker
+## 功能特性
 
-## 快速开始（Docker，推荐）
+- **输入格式**: PNG, JPG, WebP
+- **输出格式**: 带透明通道的 PNG
+- **使用方式**: 
+  - 命令行工具 (CLI)
+  - Web 界面 (浏览器上传/下载)
+- **容器化**: 支持 Docker 部署
 
-### 构建镜像
+## 安装
 
-```bash
-# 测试镜像
-docker build --target test -t bg-removal-test .
-
-# 运行时镜像
-docker build --target runtime -t bg-removal .
-```
-
-### 运行测试
+### 使用 Docker (推荐)
 
 ```bash
-docker run --rm bg-removal-test
+# 拉取镜像
+docker pull agi-villa/bg-removal:latest
+
+# 运行 CLI 工具
+docker run --rm -v $(pwd):/work agi-villa/bg-removal:latest bg-remove input.jpg output.png
+
+# 运行 Web 服务
+docker run --rm -p 8080:8080 agi-villa/bg-removal:latest
 ```
 
-### 移除背景
+### 从源码安装
 
 ```bash
-docker run --rm -v $(pwd)/images:/data bg-removal /data/input.jpg /data/output.png
+# 克隆仓库
+git clone https://github.com/AGI-Villa/openclaw-dev-sandbox.git
+cd openclaw-dev-sandbox/bg_removal
+
+# 安装依赖 (需要 Poetry)
+poetry install
+
+# 构建 Docker 镜像
+docker build -t bg-removal .
 ```
 
-## 本地开发（需要 Poetry）
+## 使用方法
 
-```bash
-cd bg_removal
-poetry install --with dev
-```
-
-### CLI 用法
+### CLI 命令行
 
 ```bash
 # 基本用法
-poetry run bg-remove input.jpg output.png
+bg-remove input.jpg output.png
 
-# 指定模型
-poetry run bg-remove input.png output.png --model u2net
+# 批量处理
+bg-remove *.jpg ./output/
 
-# 启用 alpha matting（更精细的边缘）
-poetry run bg-remove photo.webp result.png --alpha-matting
-
-# 后处理 mask
-poetry run bg-remove photo.jpg result.png --post-process-mask
+# 查看帮助
+bg-remove --help
 ```
 
-### 作为 Python 模块使用
+### Web 界面
 
-```python
-from bg_removal.core import remove_background
+1. 启动 Web 服务:
+   ```bash
+   # 使用 Docker
+   docker run --rm -p 8080:8080 bg-removal
+   
+   # 或使用 Python
+   python -m uvicorn bg_removal.web:app --host 0.0.0.0 --port 8080
+   ```
 
-output = remove_background("photo.jpg", "result.png")
-print(f"已保存: {output}")
-```
+2. 访问 `http://localhost:8080` 在浏览器中使用
 
-### 运行测试
+3. 功能特性:
+   - 拖拽或点击上传图片
+   - 实时预览处理结果
+   - 下载处理后的 PNG 图片
+   - 响应式设计，支持移动设备
 
+## API 接口
+
+Web 服务提供 REST API:
+
+- **POST `/api/remove-bg`**: 上传图片文件，返回处理后的 PNG
+
+请求示例:
 ```bash
-poetry run pytest -v
+curl -X POST -F "file=@input.jpg" http://localhost:8080/api/remove-bg -o output.png
 ```
 
-## 项目结构
+## 安全限制
+
+- 文件大小限制: 10MB
+- 支持的文件类型: PNG, JPG, JPEG, WebP
+- 临时文件自动清理
+
+## 开发
+
+### 目录结构
 
 ```
 bg_removal/
-├── pyproject.toml        # Poetry 依赖配置
-├── Dockerfile            # 多阶段构建 (test / runtime)
-├── .dockerignore
-├── README.md
-├── bg_removal/
+├── bg_removal/          # 核心模块
 │   ├── __init__.py
-│   ├── core.py           # 核心背景移除逻辑
-│   └── cli.py            # 命令行入口
-└── tests/
-    ├── __init__.py
-    └── test_core.py      # 单元测试
+│   ├── cli.py          # CLI 接口
+│   ├── core.py         # 核心功能
+│   └── web.py          # Web 服务
+├── web/                # Web 界面
+│   ├── index.html
+│   ├── style.css
+│   └── script.js
+├── tests/              # 测试文件
+├── Dockerfile          # Docker 配置
+├── pyproject.toml      # 依赖管理
+└── README.md           # 说明文档
 ```
 
-## 支持的模型
+### 测试
 
-默认使用 `u2net`，首次运行会自动下载模型文件（~170MB）。rembg 还支持 `u2netp`、`u2net_human_seg`、`isnet-general-use` 等模型，通过 `--model` 参数切换。
+```bash
+# 运行测试
+poetry run pytest
+```
 
-## 依赖
+## 许可证
 
-| 包 | 用途 |
-|---|---|
-| rembg[cpu] | 背景移除引擎（CPU 推理） |
-| Pillow | 图片 I/O |
-| pytest | 单元测试（dev） |
+MIT License

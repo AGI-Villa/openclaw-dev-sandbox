@@ -1,25 +1,46 @@
-FROM python:3.11-slim AS base
-
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends curl && \
-    rm -rf /var/lib/apt/lists/*
-
-RUN pip install --no-cache-dir poetry==1.8.5 && \
-    poetry config virtualenvs.create false
+# Build stage
+FROM python:3.10-slim AS builder
 
 WORKDIR /app
 
-COPY pyproject.toml ./
-RUN poetry install --no-root --no-interaction
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
+# Copy poetry files
+COPY pyproject.toml poetry.lock* ./
+
+# Install poetry and dependencies
+RUN pip install poetry==1.7.1 \
+    && poetry config virtualenvs.create false \
+    && poetry install --only=main
+
+# Runtime stage
+FROM python:3.10-slim AS runtime
+
+WORKDIR /app
+
+# Install system dependencies for rembg
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy built application and dependencies
+COPY --from=builder /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
 COPY . .
-RUN poetry install --no-interaction
 
-# ---- test stage ----
-FROM base AS test
-RUN poetry install --with dev --no-interaction
-CMD ["pytest", "-v"]
+# Create non-root user
+RUN adduser --disabled-password --gecos '' appuser && chown -R appuser:appuser /app
+USER appuser
 
-# ---- runtime stage ----
-FROM base AS runtime
-ENTRYPOINT ["bg-remove"]
+# Expose port
+EXPOSE 8080
+
+# Default command for CLI
+CMD ["bg-remove", "--help"]
+
+# Web server command
+ENTRYPOINT ["python", "-m", "uvicorn"]
+CMD ["bg_removal.web:app", "--host", "0.0.0.0", "--port", "8080"]
