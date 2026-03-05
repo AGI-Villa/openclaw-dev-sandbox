@@ -6,6 +6,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const processedImage = document.getElementById('processedImage');
     const downloadBtn = document.getElementById('downloadBtn');
     const progressBar = document.getElementById('progressBar');
+    
+    // 历史记录相关元素
+    const historyToggle = document.getElementById('historyToggle');
+    const historyContent = document.getElementById('historyContent');
+    const toggleIcon = document.getElementById('toggleIcon');
+    const historyList = document.getElementById('historyList');
+    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
 
     // 点击上传区域触发文件选择
     dropZone.addEventListener('click', () => {
@@ -98,6 +105,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
             };
+            
+            // 处理成功后刷新历史记录
+            loadHistory();
         })
         .catch(error => {
             console.error('Error:', error);
@@ -107,4 +117,124 @@ document.addEventListener('DOMContentLoaded', () => {
             progressBar.style.display = 'none';
         });
     }
+    
+    // 处理新图片成功后刷新历史记录
+    // 注意：由于历史记录是服务器端自动保存的，我们需要在成功后重新加载
+    // 这里通过重写 processImage 函数的成功部分实现，见上方代码末尾添加：
+    
+    // ============ 历史记录功能 ============
+    
+    // 加载历史记录
+    async function loadHistory() {
+        try {
+            const response = await fetch('/api/history');
+            if (!response.ok) throw new Error('Failed to load history');
+            const data = await response.json();
+            renderHistory(data.history);
+        } catch (error) {
+            console.error('Failed to load history:', error);
+        }
+    }
+    
+    // 渲染历史记录列表
+    function renderHistory(history) {
+        if (history.length === 0) {
+            historyList.innerHTML = '<p class="empty-history">暂无历史记录</p>';
+            clearHistoryBtn.style.display = 'none';
+            return;
+        }
+        
+        clearHistoryBtn.style.display = 'block';
+        historyList.innerHTML = history.map(record => `
+            <div class="history-item" data-id="${record.id}">
+                <div class="history-info">
+                    <div class="history-filename">${escapeHtml(record.original_filename)}</div>
+                    <div class="history-meta">
+                        ${new Date(record.timestamp).toLocaleString('zh-CN')} · 
+                        ${record.file_size_human}
+                    </div>
+                </div>
+                <div class="history-actions">
+                    <button class="history-btn download-btn" onclick="downloadFile('${record.processed_filename}', '${record.id}')">
+                        下载
+                    </button>
+                    <button class="history-btn delete-btn" onclick="deleteRecord('${record.id}')">
+                        删除
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    // 下载历史记录中的文件
+    async function downloadFile(filename, recordId) {
+        try {
+            const response = await fetch(`/api/download/${filename}`);
+            if (!response.ok) throw new Error('Download failed');
+            
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `background-removed-${filename.slice(0, 8)}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error('Download failed:', error);
+            alert('下载失败');
+        }
+    }
+    
+    // 删除历史记录
+    async function deleteRecord(recordId) {
+        if (!confirm('确定要删除这条记录吗？')) return;
+        
+        try {
+            const response = await fetch(`/api/history/${recordId}`, {
+                method: 'DELETE'
+            });
+            if (!response.ok) throw new Error('Delete failed');
+            
+            // 重新加载历史记录
+            await loadHistory();
+        } catch (error) {
+            console.error('Delete failed:', error);
+            alert('删除失败');
+        }
+    }
+    
+    // HTML 转义防止 XSS
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    // 历史记录面板展开/收起
+    historyToggle.addEventListener('click', () => {
+        const isHidden = historyContent.style.display === 'none' || historyContent.style.display === '';
+        historyContent.style.display = isHidden ? 'block' : 'none';
+        toggleIcon.classList.toggle('expanded', isHidden);
+    });
+    
+    // 清空所有历史记录
+    clearHistoryBtn.addEventListener('click', async () => {
+        if (!confirm('确定要清空所有历史记录吗？此操作不可恢复！')) return;
+        
+        try {
+            const history = await (await fetch('/api/history')).json();
+            for (const record of history.history) {
+                await fetch(`/api/history/${record.id}`, { method: 'DELETE' });
+            }
+            await loadHistory();
+        } catch (error) {
+            console.error('Clear history failed:', error);
+            alert('清空失败');
+        }
+    });
+    
+    // 页面加载时自动加载历史记录
+    loadHistory();
 });

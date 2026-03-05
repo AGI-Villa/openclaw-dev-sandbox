@@ -105,3 +105,152 @@ h1 {
         font-size: 1.5rem;
     }
 }
+
+/* 历史记录面板样式 */
+.history-section {
+    margin-top: 30px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    cursor: pointer;
+    background: #f8f9fa;
+    border-radius: 8px 8px 0 0;
+    user-select: none;
+}
+
+.history-header h2 {
+    margin: 0;
+    font-size: 18px;
+    color: #333;
+}
+
+.toggle-icon {
+    font-size: 14px;
+    color: #666;
+    transition: transform 0.3s;
+}
+
+.toggle-icon.expanded {
+    transform: rotate(180deg);
+}
+
+.history-content {
+    padding: 20px;
+}
+
+.history-list {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+    transition: background-color 0.2s;
+}
+
+.history-item:hover {
+    background-color: #f8f9fa;
+}
+
+.history-item:last-child {
+    border-bottom: none;
+}
+
+.history-info {
+    flex: 1;
+}
+
+.history-filename {
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.history-meta {
+    font-size: 12px;
+    color: #666;
+}
+
+.history-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.history-btn {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background-color 0.2s;
+}
+
+.download-btn {
+    background: #3498db;
+    color: white;
+}
+
+.download-btn:hover {
+    background: #2980b9;
+}
+
+.delete-btn {
+    background: #e74c3c;
+    color: white;
+}
+
+.delete-btn:hover {
+    background: #c0392b;
+}
+
+.empty-history {
+    text-align: center;
+    color: #999;
+    padding: 40px 20px;
+}
+
+.clear-history-btn {
+    margin-top: 15px;
+    padding: 10px 20px;
+    background: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%;
+    font-size: 14px;
+}
+
+.clear-history-btn:hover {
+    background: #c0392b;
+}
+
+/* 滚动条样式 */
+.history-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.history-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.history-list::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.history-list::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
