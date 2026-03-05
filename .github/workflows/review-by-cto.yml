@@ -1,10 +1,14 @@
 name: CTO Code Review
 on:
   pull_request:
-    types: [review_requested]
+    types: [review_requested, synchronize]
 jobs:
   review:
-    if: github.event.requested_reviewer.login == 'darrencto'
+    # review_requested: 直接判断 requested_reviewer
+    # synchronize: 判断 darrencto 是否已在 reviewers 列表（分支更新后重新通知）
+    if: |
+      (github.event_name == 'pull_request' && github.event.action == 'review_requested' && github.event.requested_reviewer.login == 'darrencto') ||
+      (github.event_name == 'pull_request' && github.event.action == 'synchronize' && contains(toJson(github.event.pull_request.requested_reviewers), 'darrencto'))
     runs-on: self-hosted
     steps:
       - name: Notify CTO Agent via Discord Inbox
